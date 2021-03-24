@@ -1,0 +1,23 @@
+{
+  "name": "furry-engine",
+  "version": "1.0.0",
+  "description": "Complete Node.js Guide",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/a-stanisz/furry-engine.git"
+  },
+  "author": "Adam Staniszewski",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/a-stanisz/furry-engine/issues"
+  },
+  "homepage": "https://github.com/a-stanisz/furry-engine#readme",
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}
