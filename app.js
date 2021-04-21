@@ -53,7 +53,8 @@ sequelize
   .then(result => {
     return User.findByPk(1);
     // console.log(result);
-  }).then(user => {
+  })
+  .then(user => {
     if (!user) {
       return User.create({ name: 'Adam', email: 'adam@goomail.com' });
     }
@@ -62,7 +63,8 @@ sequelize
   .then(user => {
     // console.log(user);
     return user.createCart();
-  }).then(cart => {
+  })
+  .then(cart => {
     app.listen(3000);
   })
   .catch(err => {
