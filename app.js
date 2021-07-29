@@ -8,6 +8,8 @@ const errorController = require('./controllers/error');
 
 const mongoConnect = require('./util/database').mongoConnect;
 
+const User = require('./models/user');
+
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
@@ -18,10 +20,13 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
-  next();
+  User.findById('61028df1b0f2b450ded338fb')
+    .then((user) => {
+      req.user = user;
+      next();
+    })
+    .catch((err) => console.log(err));
 });
-
-// app.use((req, res, next) => {});
 
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
