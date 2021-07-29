@@ -4,9 +4,10 @@ const getDb = require('../util/database').getDb;
 const ObjectId = mongodb.ObjectId;
 
 class User {
-  constructor(name, email, id) {
+  constructor(name, email, cart, id) {
     this.name = name;
     this.email = email;
+    this.cart = cart;
     this._id = id ? new mongodb.ObjectId(id) : null;
   }
 
@@ -30,6 +31,34 @@ class User {
       .catch((err) => {
         console.log(err);
       });
+  }
+
+  addToCart(product) {
+    const cartProductIndex = this.cart.items.findIndex((cartProd) => {
+      return cartProd.productId.toString() === product._id.toString();
+    });
+    let newQuantity = 1;
+    const updatedCartItems = [...this.cart.items];
+
+    if (cartProductIndex >= 0) {
+      newQuantity = this.cart.items[cartProductIndex].quantity + 1;
+      updatedCartItems[cartProductIndex].quantity = newQuantity;
+    } else {
+      updatedCartItems.push({
+        productId: new ObjectId(product._id),
+        quantity: 1,
+      });
+    }
+    const updatedCart = {
+      items: updatedCartItems,
+    };
+    const db = getDb();
+    return db
+      .collection('users')
+      .updateOne(
+        { _id: new ObjectId(this._id) },
+        { $set: { cart: updatedCart } }
+      );
   }
 
   static findById(userId) {
