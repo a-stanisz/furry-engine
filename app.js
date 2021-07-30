@@ -3,10 +3,9 @@ const path = require('path');
 const express = require('express');
 
 const app = express();
+const mongoose = require('mongoose');
 
 const errorController = require('./controllers/error');
-
-const mongoConnect = require('./util/database').mongoConnect;
 
 const User = require('./models/user');
 
@@ -33,7 +32,16 @@ app.use(shopRoutes);
 
 app.use(errorController.get404);
 
-mongoConnect(() => {
-  console.log('Port: 3000');
-  app.listen(3000);
-});
+mongoose.set('useNewUrlParser', true);
+mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true);
+mongoose.set('useUnifiedTopology', true);
+
+mongoose
+  .connect(process.env.DB_CONN_STR)
+  .then((result) => {
+    console.log(result);
+    app.listen(3000);
+    console.log('Connected at port: 3000!');
+  })
+  .catch((err) => console.log(err));
