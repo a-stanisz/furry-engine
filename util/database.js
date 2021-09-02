@@ -1,30 +1,30 @@
-const mongodb = require('mongodb');
-const MongoClient = mongodb.MongoClient;
+// const mongodb = require('mongodb');
+// const MongoClient = mongodb.MongoClient;
 
-let _db;
+// let _db;
 
-const mongoConnect = (success) => {
-  MongoClient.connect(process.env.DB_CONN_STR, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-    .then((client) => {
-      console.log('Connected!');
-      _db = client.db();
-      success();
-    })
-    .catch((err) => {
-      console.log(err);
-      throw err;
-    });
-};
+// const mongoConnect = (success) => {
+//   MongoClient.connect(process.env.DB_CONN_STR, {
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true,
+//   })
+//     .then((client) => {
+//       console.log('Connected!');
+//       _db = client.db();
+//       success();
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//       throw err;
+//     });
+// };
 
-const getDb = () => {
-  if (_db) {
-    return _db;
-  }
-  throw 'No database found!';
-};
+// const getDb = () => {
+//   if (_db) {
+//     return _db;
+//   }
+//   throw 'No database found!';
+// };
 
-exports.mongoConnect = mongoConnect;
-exports.getDb = getDb;
+// exports.mongoConnect = mongoConnect;
+// exports.getDb = getDb;
