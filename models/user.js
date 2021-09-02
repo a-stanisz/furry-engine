@@ -14,12 +14,73 @@ const userSchema = new Schema({
   cart: {
     items: [
       {
-        productId: { type: Schema.Types.ObjectId, required: true },
+        productId: {
+          type: Schema.Types.ObjectId,
+          ref: 'Product',
+          required: true,
+        },
         quantity: { type: Number, required: true },
       },
     ],
   },
 });
+
+userSchema.methods.addToCart = function (product) {
+  const cartProductIndex = this.cart.items.findIndex((cartProd) => {
+    return cartProd.productId.toString() === product._id.toString();
+  });
+  let newQuantity = 1;
+  const updatedCartItems = [...this.cart.items];
+
+  if (cartProductIndex >= 0) {
+    newQuantity = this.cart.items[cartProductIndex].quantity + 1;
+    updatedCartItems[cartProductIndex].quantity = newQuantity;
+  } else {
+    updatedCartItems.push({
+      productId: product._id,
+      quantity: 1,
+    });
+  }
+  const updatedCart = {
+    items: updatedCartItems,
+  };
+  this.cart = updatedCart;
+  return this.save();
+};
+
+userSchema.methods.deleteItemFromCart = function (productId) {
+  const updatedCartItems = this.cart.items.filter((item) => {
+    return item.productId.toString() !== productId.toString();
+  });
+  this.cart.items = updatedCartItems;
+  return this.save();
+};
+
+userSchema.methods.clearCart = function () {
+  this.cart = { items: [] };
+  return this.save();
+};
+
+// userSchema.methods.getCart = function (user) {
+//   const productsIds = this.cart.items.map((item) => {
+//     return item.productId;
+//   });
+//   return db
+//     .collection('products')
+//     .find({ _id: { $in: productsIds } })
+//     .toArray()
+//     .then((products) => {
+//       return products.map((product) => {
+//         return {
+//           ...product,
+//           quantity: this.cart.items.find((i) => {
+//             return i.productId.toString() === product._id.toString();
+//           }).quantity,
+//         };
+//       });
+//     })
+//     .catch((err) => console.log(err));
+// };
 
 // const mongodb = require('mongodb');
 // const getDb = require('../util/database').getDb;
