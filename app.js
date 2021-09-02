@@ -18,14 +18,14 @@ const shopRoutes = require('./routes/shop');
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// app.use((req, res, next) => {
-//   User.findById('61028df1b0f2b450ded338fb')
-//     .then((user) => {
-//       req.user = new User(user.name, user.email, user.cart, user._id);
-//       next();
-//     })
-//     .catch((err) => console.log(err));
-// });
+app.use((req, res, next) => {
+  User.findById('6130b8bf2a22e038600a3ddf')
+    .then((user) => {
+      req.user = user;
+      next();
+    })
+    .catch((err) => console.log(err));
+});
 
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
@@ -40,7 +40,18 @@ mongoose.set('useUnifiedTopology', true);
 mongoose
   .connect(process.env.DB_CONN_STR)
   .then((result) => {
-    console.log(result);
+    User.findOne().then((user) => {
+      if (!user) {
+        const user = new User({
+          name: 'Adam',
+          email: 'adam@example.com',
+          cart: {
+            items: [],
+          },
+        });
+        user.save();
+      }
+    });
     app.listen(3000);
     console.log('Connected at port: 3000!');
   })
