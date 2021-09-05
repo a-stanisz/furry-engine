@@ -7,7 +7,15 @@ exports.getLogin = (req, res, next) => {
   res.render('auth/login', {
     path: '/login',
     pageTitle: 'Log in',
-    isAuthenticated: req.session.isLoggedIn
+    isAuthenticated: false
+  });
+};
+
+exports.getSignup = (req, res, next) => {
+  res.render('auth/signup', {
+    path: '/signup',
+    pageTitle: 'Sign up',
+    isAuthenticated: false
   });
 };
 
@@ -24,6 +32,8 @@ exports.postLogin = (req, res, next) => {
     })
     .catch((err) => console.log(err));
 };
+
+// exports.postSignup = (req, res, next) => {}
 
 exports.postLogout = (req, res, next) => {
   req.session.destroy((err) => {
