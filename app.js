@@ -53,23 +53,11 @@ app.use(errorController.get404);
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
-mongoose.set('useUnifiedTopology', true);
+// mongoose.set('useUnifiedTopology', true);
 
 mongoose
   .connect(process.env.DB_CONN_STR)
   .then((result) => {
-    User.findOne().then((user) => {
-      if (!user) {
-        const user = new User({
-          name: 'Adam',
-          email: 'adam@example.com',
-          cart: {
-            items: [],
-          },
-        });
-        user.save();
-      }
-    });
     app.listen(3000);
     console.log('Connected at port: 3000!');
   })
