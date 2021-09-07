@@ -1,6 +1,19 @@
 const bcrypt = require('bcryptjs');
+// const nodemailer = require('nodemailer');
+// const sendGridTransport = require('nodemailer-sendgrid-transport');
+const sendgridMail = require('@sendgrid/mail');
 
 const User = require('../models/user');
+
+sendgridMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+// const transporter = nodemailer.createTransport(
+//   sendGridTransport({
+//     auth: {
+//       api_key: process.env.SENDGRID_API_KEY,
+//     },
+//   })
+// );
 
 exports.getLogin = (req, res, next) => {
   let message = req.flash('error');
@@ -84,6 +97,22 @@ exports.postSignup = (req, res, next) => {
         .then((result) => {
           // console.log(result);
           res.redirect('/login');
+          return sendgridMail
+            .send({
+              to: email,
+              from: 'astnsz.dev@gmail.com',
+              subject: 'Furry shop successfull signup',
+              html: '<h1>You are signed up successfully</h1>',
+            })
+            .then(
+              () => {},
+              (error) => {
+                console.error(error);
+                if (error.response) {
+                  console.error(error.response.body);
+                }
+              }
+            );
         });
     })
     .catch((err) => console.log(err));
