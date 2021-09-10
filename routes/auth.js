@@ -8,13 +8,22 @@ const router = express.Router();
 
 router.get('/login', authController.getLogin);
 router.get('/signup', authController.getSignup);
-router.post('/login', authController.postLogin);
+router.post('/login',
+  [
+    body('email')
+      .isEmail()
+      .withMessage('Please enter a valid e-mail'),
+    body('password', 'Password is wrong')
+      .isLength({min: 5})
+      .isAlphanumeric()
+  ],
+  authController.postLogin);
 router.post(
   '/signup',
   [
     check('email')
       .isEmail()
-      .withMessage('Please enter a valid-email')
+      .withMessage('Please enter a valid e-mail')
       .custom((value, { req }) => {
         // if (value === 'test@test.com') {
         //   throw new Error('This e-mail is forbidden.');
