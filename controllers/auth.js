@@ -100,7 +100,7 @@ exports.postSignup = (req, res, next) => {
           return sendgridMail
             .send({
               to: email,
-              from: 'astnsz.dev@gmail.com',
+              from: process.env.DEV_TEST_EMAIL,
               subject: 'Furry shop successfull signup',
               html: '<h1>You are signed up successfully</h1>',
             })
