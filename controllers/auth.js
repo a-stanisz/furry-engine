@@ -92,7 +92,7 @@ exports.postSignup = (req, res, next) => {
           return sendgridMail
             .send({
               to: email,
-              from: 'astnsz.dev@gmail.com',
+              from: process.env.DEV_TEST_EMAIL,
               subject: 'Furry shop successfull signup',
               html: '<h1>You are signed up successfully</h1>',
             })
@@ -152,7 +152,7 @@ exports.postReset = (req, res, next) => {
         sendgridMail
           .send({
             to: req.body.email,
-            from: 'astnsz.dev@gmail.com',
+            from: process.env.DEV_TEST_EMAIL,
             subject: 'Password reset',
             html: `
           <h1>You've requested password reset</h1>
