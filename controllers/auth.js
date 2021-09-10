@@ -8,7 +8,6 @@ sendgridMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const User = require('../models/user');
 
-
 exports.getLogin = (req, res, next) => {
   let message = req.flash('error');
   if (message.length > 0) {
@@ -20,6 +19,11 @@ exports.getLogin = (req, res, next) => {
     path: '/login',
     pageTitle: 'Log in',
     errorMessage: message,
+    oldInput: {
+      email: '',
+      password: '',
+    },
+    validationErrors: [],
   });
 };
 
@@ -34,6 +38,12 @@ exports.getSignup = (req, res, next) => {
     path: '/signup',
     pageTitle: 'Sign up',
     errorMessage: message,
+    oldInput: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+    validationErrors: [],
   });
 };
 
@@ -47,10 +57,27 @@ exports.postLogin = (req, res, next) => {
       path: '/login',
       pageTitle: 'Log in',
       errorMessage: errors.array()[0].msg,
+      oldInput: {
+        email: email,
+        password: password,
+      },
+      validationErrors: errors.array(),
     });
   }
   User.findOne({ email: email })
     .then((user) => {
+      if (!user) {
+        return res.status(422).render('auth/login', {
+          path: '/login',
+          pageTitle: 'Log in',
+          errorMessage: 'Invalid login data',
+          oldInput: {
+            email: email,
+            password: password,
+          },
+          validationErrors: [],
+        });
+      }
       bcrypt
         .compare(password, user.password)
         .then((doMatch) => {
@@ -62,17 +89,21 @@ exports.postLogin = (req, res, next) => {
               res.redirect('/');
             });
           }
-          req.flash('error', 'Invalid login data!');
-          res.redirect('/login');
+          return res.status(422).render('auth/login', {
+            path: '/login',
+            pageTitle: 'Log in',
+            errorMessage: 'Invalid login data',
+            oldInput: {
+              email: email,
+              password: password,
+            },
+            validationErrors: [],
+          });
         })
         .catch((err) => {
           console.log(err);
           res.redirect('/login');
         });
-      if (!user) {
-        req.flash('error', 'Invalid login data!');
-        return res.redirect('/login');
-      }
     })
     .catch((err) => console.log(err));
 };
@@ -87,6 +118,12 @@ exports.postSignup = (req, res, next) => {
       path: '/signup',
       pageTitle: 'Sign up',
       errorMessage: errors.array()[0].msg,
+      oldInput: {
+        email: email,
+        password: password,
+        confirmPassword: req.body.confirmPassword,
+      },
+      validationErrors: errors.array(),
     });
   }
   bcrypt
