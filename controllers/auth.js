@@ -1,11 +1,12 @@
 const crypto = require('crypto');
-
 const bcrypt = require('bcryptjs');
+
+const { validationResult } = require('express-validator/check');
+
 const sendgridMail = require('@sendgrid/mail');
+sendgridMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const User = require('../models/user');
-
-sendgridMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 exports.getLogin = (req, res, next) => {
   let message = req.flash('error');
@@ -18,6 +19,11 @@ exports.getLogin = (req, res, next) => {
     path: '/login',
     pageTitle: 'Log in',
     errorMessage: message,
+    oldInput: {
+      email: '',
+      password: '',
+    },
+    validationErrors: [],
   });
 };
 
@@ -32,17 +38,45 @@ exports.getSignup = (req, res, next) => {
     path: '/signup',
     pageTitle: 'Sign up',
     errorMessage: message,
+    oldInput: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+    validationErrors: [],
   });
 };
 
 exports.postLogin = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    // console.log(errors.array());
+    return res.status(422).render('auth/login', {
+      path: '/login',
+      pageTitle: 'Log in',
+      errorMessage: errors.array()[0].msg,
+      oldInput: {
+        email: email,
+        password: password,
+      },
+      validationErrors: errors.array(),
+    });
+  }
   User.findOne({ email: email })
     .then((user) => {
       if (!user) {
-        req.flash('error', 'Invalid login data!');
-        return res.redirect('/login');
+        return res.status(422).render('auth/login', {
+          path: '/login',
+          pageTitle: 'Log in',
+          errorMessage: 'Invalid login data',
+          oldInput: {
+            email: email,
+            password: password,
+          },
+          validationErrors: [],
+        });
       }
       bcrypt
         .compare(password, user.password)
@@ -55,8 +89,16 @@ exports.postLogin = (req, res, next) => {
               res.redirect('/');
             });
           }
-          req.flash('error', 'Invalid login data!');
-          res.redirect('/login');
+          return res.status(422).render('auth/login', {
+            path: '/login',
+            pageTitle: 'Log in',
+            errorMessage: 'Invalid login data',
+            oldInput: {
+              email: email,
+              password: password,
+            },
+            validationErrors: [],
+          });
         })
         .catch((err) => {
           console.log(err);
@@ -69,45 +111,51 @@ exports.postLogin = (req, res, next) => {
 exports.postSignup = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
-  const confirmedPassword = req.body.confirmPassword;
-  User.findOne({ email: email })
-    .then((userDoc) => {
-      if (userDoc) {
-        req.flash('error', 'This e-mail already exists!');
-        return res.redirect('/signup');
-      }
-      return bcrypt
-        .hash(password, 12)
-        .then((hashedPassword) => {
-          const user = new User({
-            email: email,
-            password: hashedPassword,
-            cart: { items: [] },
-          });
-          return user.save();
-        })
-        .then((result) => {
-          // console.log(result);
-          res.redirect('/login');
-          return sendgridMail
-            .send({
-              to: email,
-              from: 'astnsz.dev@gmail.com',
-              subject: 'Furry shop successfull signup',
-              html: '<h1>You are signed up successfully</h1>',
-            })
-            .then(
-              () => {},
-              (error) => {
-                console.error(error);
-                if (error.response) {
-                  console.error(error.response.body);
-                }
-              }
-            );
-        });
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    // console.log(errors.array());
+    return res.status(422).render('auth/signup', {
+      path: '/signup',
+      pageTitle: 'Sign up',
+      errorMessage: errors.array()[0].msg,
+      oldInput: {
+        email: email,
+        password: password,
+        confirmPassword: req.body.confirmPassword,
+      },
+      validationErrors: errors.array(),
+    });
+  }
+  bcrypt
+    .hash(password, 12)
+    .then((hashedPassword) => {
+      const user = new User({
+        email: email,
+        password: hashedPassword,
+        cart: { items: [] },
+      });
+      return user.save();
     })
-    .catch((err) => console.log(err));
+    .then((result) => {
+      // console.log(result);
+      res.redirect('/login');
+      return sendgridMail
+        .send({
+          to: email,
+          from: process.env.DEV_TEST_EMAIL,
+          subject: 'Furry shop successfull signup',
+          html: '<h1>You are signed up successfully</h1>',
+        })
+        .then(
+          () => {},
+          (error) => {
+            console.error(error);
+            if (error.response) {
+              console.error(error.response.body);
+            }
+          }
+        );
+    });
 };
 
 exports.postLogout = (req, res, next) => {
@@ -152,7 +200,7 @@ exports.postReset = (req, res, next) => {
         sendgridMail
           .send({
             to: req.body.email,
-            from: 'astnsz.dev@gmail.com',
+            from: process.env.DEV_TEST_EMAIL,
             subject: 'Password reset',
             html: `
           <h1>You've requested password reset</h1>
