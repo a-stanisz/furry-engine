@@ -51,7 +51,7 @@ const authRoutes = require('./routes/auth');
 app.use(express.urlencoded({ extended: false }));
 app.use(multer(
   {
-    dest: './images',
+    // dest: './images',
     storage: fileStorage,
     fileFilter: fileFilter,
   }
@@ -70,6 +70,12 @@ app.use(csrfProtection);
 app.use(flash());
 
 app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.session.isLoggedIn;
+  res.locals.csrfToken = req.csrfToken();
+  next();
+});
+
+app.use((req, res, next) => {
   if (!req.session.user) {
     return next();
   }
@@ -86,12 +92,6 @@ app.use((req, res, next) => {
     });
 });
 
-app.use((req, res, next) => {
-  res.locals.isAuthenticated = req.session.isLoggedIn;
-  res.locals.csrfToken = req.csrfToken();
-  next();
-});
-
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
@@ -104,7 +104,7 @@ app.use((error, req, res, next) => {
   // res.redirect('/500');
   res.status(500).render(
     '500', {
-      pageTitle: 'Page Not Found',
+      pageTitle: 'Internal Server Error!',
       path: '/500',
       isAuthenticated: req.session.isLoggedIn
     });
