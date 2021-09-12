@@ -18,8 +18,26 @@ exports.getAddProduct = (req, res, next) => {
 exports.postAddProduct = (req, res, next) => {
   const title = req.body.title;
   const price = req.body.price;
-  const imageUrl = req.body.imageUrl;
+  const image = req.file;
+  // console.log(image);
   const description = req.body.description;
+  if (!image) {
+    return res.status(422).render('admin/edit-product', {
+      pageTitle: 'Add Product',
+      path: '/admin/add-product',
+      editing: false,
+      hasError: true,
+      product: {
+        title: title,
+        price: price,
+        // image: image,
+        description: description, 
+      },
+      errorMessage: 'Attached file is not an image',
+      validationErrors: [],
+    });
+  }
+  const imageUrl = image.path;
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(422).render('admin/edit-product', {
@@ -30,7 +48,6 @@ exports.postAddProduct = (req, res, next) => {
       product: {
         title: title,
         price: price,
-        imageUrl: imageUrl,
         description: description, 
       },
       errorMessage: errors.array()[0].msg,
@@ -91,7 +108,7 @@ exports.postEditProduct = (req, res, next) => {
   const DBprodId = new ObjectId(prodId);
   const updatedTitle = req.body.title;
   const updatedPrice = req.body.price;
-  const updatedImgUrl = req.body.imageUrl;
+  const image = req.image;
   const updatedDescription = req.body.description;
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -103,7 +120,6 @@ exports.postEditProduct = (req, res, next) => {
       product: {
         title: updatedTitle,
         price: updatedPrice,
-        imageUrl: updatedImgUrl,
         description: updatedDescription, 
         _id: prodId,
       },
@@ -118,8 +134,10 @@ exports.postEditProduct = (req, res, next) => {
       }
       product.title = updatedTitle;
       product.price = updatedPrice;
-      product.imageUrl = updatedImgUrl;
       product.description = updatedDescription;
+      if (image) {
+        product.imageUrl = image.path;
+      }
       return product.save().then((result) => {
         console.log('Product updated');
         res.redirect('/admin/products');
