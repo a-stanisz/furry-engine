@@ -32,7 +32,7 @@ exports.postAddProduct = (req, res, next) => {
         title: title,
         price: price,
         // image: image,
-        description: description, 
+        description: description,
       },
       errorMessage: 'Attached file is not an image',
       validationErrors: [],
@@ -49,7 +49,7 @@ exports.postAddProduct = (req, res, next) => {
       product: {
         title: title,
         price: price,
-        description: description, 
+        description: description,
       },
       errorMessage: errors.array()[0].msg,
       validationErrors: errors.array(),
@@ -121,7 +121,7 @@ exports.postEditProduct = (req, res, next) => {
       product: {
         title: updatedTitle,
         price: updatedPrice,
-        description: updatedDescription, 
+        description: updatedDescription,
         _id: prodId,
       },
       errorMessage: errors.array()[0].msg,
@@ -172,7 +172,7 @@ exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
   const DBprodId = new ObjectId(prodId);
   Product.findById(DBprodId)
-    .then(product => {
+    .then((product) => {
       if (!product) {
         return next(new Error('Product not found!'));
       }
@@ -181,12 +181,11 @@ exports.postDeleteProduct = (req, res, next) => {
     })
     .then((result) => {
       console.log('Product deleted from db!');
-      res.redirect('products');
+      res.redirect('/admin/products');
     })
     .catch((err) => {
       const error = new Error(err);
       error.httpStatusCode = 500;
       return next(error);
-    })
-    .catch(err => next(err));
+    });
 };
