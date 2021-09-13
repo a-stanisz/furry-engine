@@ -8,6 +8,8 @@ const csrf = require('csurf');
 const flash = require('connect-flash');
 const multer = require('multer');
 
+const { v4: uuidv4 } = require('uuid');
+
 const errorController = require('./controllers/error');
 const User = require('./models/user');
 
@@ -23,22 +25,20 @@ const fileStorage = multer.diskStorage({
     cb(null, 'images');
   },
   filename: (req, file, cb) => {
-    cb(null, new Date().toISOString() + '-' + file.originalname);
+    cb(null, `${uuidv4()}_${file.originalname}`);
   },
 });
 
 const fileFilter = (req, file, cb) => {
   if (
-    file.mimetype === 'image/png'
-    ||
-    file.mimetype === 'image/jpg'
-    ||
+    file.mimetype === 'image/png' ||
+    file.mimetype === 'image/jpg' ||
     file.mimetype === 'image/jpeg'
-    ){
-      cb(null, true);
-    } else {
-      cb(null, false);
-    }
+  ) {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
 };
 
 app.set('view engine', 'ejs');
@@ -49,13 +49,13 @@ const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
 
 app.use(express.urlencoded({ extended: false }));
-app.use(multer(
-  {
+app.use(
+  multer({
     // dest: './images',
     storage: fileStorage,
     fileFilter: fileFilter,
-  }
-  ).single('image'));
+  }).single('image')
+);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use(
@@ -102,13 +102,12 @@ app.use(errorController.get404);
 
 app.use((error, req, res, next) => {
   // res.redirect('/500');
-  res.status(500).render(
-    '500', {
-      pageTitle: 'Internal Server Error!',
-      path: '/500',
-      isAuthenticated: req.session.isLoggedIn
-    });
-})
+  res.status(500).render('500', {
+    pageTitle: 'Internal Server Error!',
+    path: '/500',
+    isAuthenticated: req.session.isLoggedIn,
+  });
+});
 
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
