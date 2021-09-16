@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const stripe = require('stripe')(process.env.STRIP_TEST_KEY);
 
 const fileHelper = require('../util/file');
 
@@ -87,7 +88,75 @@ exports.postCartDeleteProduct = (req, res, next) => {
     .catch((err) => console.log(err));
 };
 
+exports.getCheckout = (req, res, next) => {
+  let products;
+  let total = 0;
+  req.user
+    .populate('cart.items.productId')
+    .execPopulate()
+    .then((user) => {
+      const products = user.cart.items;
+      let total = 0;
+      products.forEach(p => {
+        total += p.quantity * p.productId.price;
+      });
+
+      return stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: products.map(p => {
+          return {
+            name: p.productId.title,
+            description: p.productId.description,
+            amount: p.productId.price * 100,
+            currency: 'usd',
+            quantity: p.quantity,
+          };
+        }),
+        success_url: `${res.protocol}://${req.get('host')}/checkout/success`,
+        cancel_url: `${res.protocol}://${req.get('host')}/checkout/cancel`,
+      });
+    })
+    .then(session => {
+      res.render('shop/checkout', {
+        path: '/checkout',
+        pageTitle: 'Checkout',
+        products: products,
+        totalSum: `$${total}`,
+        stripeToken: process.env.STRIPE_TEST_TOKEN,
+        sessionId: session.id,
+      });
+    })
+    .catch((err) => console.log(err));
+}
+
 exports.postOrder = (req, res, next) => {
+  req.user
+    .populate('cart.items.productId')
+    .execPopulate()
+    .then((user) => {
+      const products = user.cart.items.map((i) => {
+        return { quantity: i.quantity, product: { ...i.productId._doc } };
+      });
+      const order = new Order({
+        user: {
+          name: req.user.email,
+          userId: req.user,
+        },
+        products: products,
+      });
+      order.save();
+    })
+    .then((result) => {
+      // console.log(result);
+      req.user.clearCart();
+    })
+    .then((result) => {
+      res.redirect('/orders');
+    })
+    .catch((err) => console.log(err));
+};
+
+exports.getCheckoutSuccess = (req, res, next) => {
   req.user
     .populate('cart.items.productId')
     .execPopulate()
